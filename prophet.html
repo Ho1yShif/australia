@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Australian Phrase Prophet™</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One:wght@400&family=Inter:wght@400;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #ff6b35, #f7931e, #ffcc02);
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+        }
+        
+        .aussie-flag {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 3rem;
+            animation: wave 2s ease-in-out infinite;
+        }
+        
+        @keyframes wave {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(10deg); }
+            75% { transform: rotate(-5deg); }
+        }
+        
+        .container {
+            text-align: center;
+            max-width: 800px;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            margin: 2rem;
+            position: relative;
+        }
+        
+        .title {
+            font-family: 'Fredoka One', cursive;
+            font-size: 3rem;
+            color: #8B0000;
+            text-shadow: 3px 3px 0px #FFD700, 6px 6px 10px rgba(0, 0, 0, 0.3);
+            margin-bottom: 1rem;
+            animation: bounce 2s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            color: #2C1810;
+            margin-bottom: 2rem;
+            font-weight: 600;
+        }
+        
+        .prophet-button {
+            background: linear-gradient(45deg, #8B0000, #DC143C, #FF6347);
+            border: none;
+            padding: 1.5rem 3rem;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: white;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(139, 0, 0, 0.4);
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .prophet-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+        
+        .prophet-button:hover::before {
+            left: 100%;
+        }
+        
+        .prophet-button:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 15px 35px rgba(139, 0, 0, 0.6);
+        }
+        
+        .prophet-button:active {
+            transform: translateY(-1px) scale(1.02);
+        }
+        
+        .prediction-container {
+            margin-top: 2rem;
+            margin-bottom: 4rem;
+            min-height: 350px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .prediction-text {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #8B0000;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            border: 3px solid #FFD700;
+            position: relative;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .prediction-text.with-reflection {
+            -webkit-box-reflect: below 10px linear-gradient(transparent 0%, rgba(255,255,255,0.3));
+            box-reflect: below 10px linear-gradient(transparent 0%, rgba(255,255,255,0.3));
+        }
+        
+        .prediction-text::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            right: -5px;
+            bottom: -5px;
+            background: linear-gradient(45deg, #FFD700, #FFA500, #FF6347, #FFD700);
+            border-radius: 20px;
+            z-index: -1;
+            animation: shimmer 2s linear infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .confidence-score {
+            margin-top: 1rem;
+            font-size: 1rem;
+            color: #2C1810;
+            font-weight: 600;
+        }
+        
+        .loading {
+            font-size: 1.5rem;
+            color: #8B0000;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .kangaroo {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            font-size: 2rem;
+            animation: hop 3s ease-in-out infinite;
+        }
+        
+        @keyframes hop {
+            0%, 100% { transform: translateY(0px) translateX(0px); }
+            25% { transform: translateY(-15px) translateX(10px); }
+            50% { transform: translateY(-5px) translateX(20px); }
+            75% { transform: translateY(-10px) translateX(10px); }
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .stat-item {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 1rem;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #8B0000;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: #2C1810;
+            margin-top: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="aussie-flag">🇦🇺</div>
+    <div class="kangaroo">🦘</div>
+    
+    <div class="container">
+        <h1 class="title">Australian Phrase Prophet™</h1>
+        <p class="subtitle">Predicting Tomorrow's Slang Today, Using Advanced AI and Fair Dinkum Science</p>
+        
+        <button class="prophet-button" onclick="predictPhrase()">
+            Generate Next Aussie Phrase
+        </button>
+        
+        <div class="prediction-container">
+            <div id="prediction" class="prediction-text" style="display: none;">
+                <div id="phrase-text"></div>
+                <div class="confidence-score">
+                    <span id="confidence"></span> | 
+                    <span id="region"></span> | 
+                    <span id="george-score"></span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-value" id="phrases-generated">0</div>
+                <div class="stat-label">Phrases Generated</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="viral-potential">87%</div>
+                <div class="stat-label">Viral Potential</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="authenticity">94%</div>
+                <div class="stat-label">Aussie Authenticity</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="george-approval">96%</div>
+                <div class="stat-label">George Laugh Score</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Synthetic training data - Verified Australian phrases
+        const verifiedPhrases = [
+            "We're not here to fuck spiders",
+            "Stone the flamin' crows",
+            "Fair dinkum",
+            "She'll be right, mate",
+            "Flat out like a lizard drinking",
+            "Mad as a cut snake",
+            "Dry as a dead dingo's donger",
+            "Happy as a pig in mud",
+            "Useless as tits on a bull",
+            "Busy as a one-legged cat in a sandbox"
+        ];
+
+        // Google Trends simulation data
+        const trendingTerms = [
+            "dropbear", "swooping season", "bunnings snag", "servo pie", "ute", 
+            "thongs", "arvo", "brekkie", "maccas", "bottle-o", "tradie", 
+            "tinny", "stubby", "durry", "pokies", "bikie", "truckie"
+        ];
+
+        // Social media sentiment data
+        const sentimentModifiers = [
+            "cooked", "cop that", "too right", "bloody oath", "crikey", 
+            "strewth", "blimey", "cor blimey", "stone me", "fair shake"
+        ];
+
+        // Australian animals for phrase generation
+        const aussieAnimals = [
+            "wombat", "echidna", "bilby", "quokka", "bandicoot", "potoroo", 
+            "wallaby", "possum", "koala", "dingo", "cassowary", "emu", 
+            "platypus", "kookaburra", "galah", "cockatoo", "wedgie", 
+            "magpie", "ibis", "dropbear", "bunyip", "yowie"
+        ];
+
+        // Action verbs for phrase combinations
+        const aussieActions = [
+            "wrestle", "cuddle", "tickle", "chase", "feed", "pat", "ride", 
+            "race", "sing to", "dance with", "argue with", "negotiate with", 
+            "play poker with", "have a beer with", "go shopping with", 
+            "watch footy with", "barbecue", "interview", "teach", "learn from"
+        ];
+
+        // Regional preferences
+        const regions = [
+            "Queensland", "New South Wales", "Victoria", "South Australia", 
+            "Western Australia", "Tasmania", "Northern Territory", "ACT"
+        ];
+
+        let phrasesGenerated = 0;
+
+        function predictPhrase() {
+            const predictionElement = document.getElementById('prediction');
+            const phraseElement = document.getElementById('phrase-text');
+            const confidenceElement = document.getElementById('confidence');
+            const regionElement = document.getElementById('region');
+            const georgeElement = document.getElementById('george-score');
+            
+            // Show loading state
+            predictionElement.style.display = 'block';
+            phraseElement.innerHTML = '<div class="loading">🤖 Analyzing 50,000+ verified Aussie phrases...</div>';
+            predictionElement.classList.remove('with-reflection');
+            
+            setTimeout(() => {
+                phraseElement.innerHTML = '<div class="loading">🔍 Cross-referencing with footy results and weather patterns...</div>';
+            }, 800);
+            
+            setTimeout(() => {
+                phraseElement.innerHTML = '<div class="loading">🧠 Training neural networks on Strine detection algorithms...</div>';
+            }, 1600);
+            
+            setTimeout(() => {
+                // Generate phrase using our advanced AI
+                const phrase = generateAussiePhrase();
+                const confidence = Math.floor(Math.random() * 15) + 85; // 85-99%
+                const region = regions[Math.floor(Math.random() * regions.length)];
+                const georgeScore = Math.floor(Math.random() * 20) + 80; // 80-99%
+                
+                // Display prediction with reflection effect for Australians
+                phraseElement.innerHTML = `"${phrase}"`;
+                confidenceElement.textContent = `${confidence}% Confidence`;
+                regionElement.textContent = `Peak adoption: ${region}`;
+                georgeElement.textContent = `George Laugh Score: ${georgeScore}%`;
+                
+                // Apply the Australian reflection effect
+                predictionElement.classList.add('with-reflection');
+                
+                // Update stats
+                phrasesGenerated++;
+                document.getElementById('phrases-generated').textContent = phrasesGenerated;
+                document.getElementById('george-approval').textContent = georgeScore + '%';
+                
+                // Randomly update other stats for realism
+                document.getElementById('viral-potential').textContent = (Math.floor(Math.random() * 20) + 80) + '%';
+                document.getElementById('authenticity').textContent = (Math.floor(Math.random() * 15) + 85) + '%';
+            }, 2400);
+        }
+
+        function generateAussiePhrase() {
+            const phraseTypes = [
+                () => generateWeAreNotHere(),
+                () => generateAnimalAction(),
+                () => generateComparison(),
+                () => generateExclamation(),
+                () => generateSituation()
+            ];
+            
+            const generator = phraseTypes[Math.floor(Math.random() * phraseTypes.length)];
+            return generator();
+        }
+
+        function generateWeAreNotHere() {
+            const animal = aussieAnimals[Math.floor(Math.random() * aussieAnimals.length)];
+            const action = aussieActions[Math.floor(Math.random() * aussieActions.length)];
+            const plural = Math.random() > 0.5 ? animal + 's' : animal;
+            return `We're not here to ${action} ${plural}`;
+        }
+
+        function generateAnimalAction() {
+            const animal = aussieAnimals[Math.floor(Math.random() * aussieAnimals.length)];
+            const actions = ["drinking", "swimming", "sunbaking", "voting", "shopping", "coding", "streaming"];
+            const action = actions[Math.floor(Math.random() * actions.length)];
+            const intensity = ["flat out", "mad as", "busy as", "happy as", "dry as"];
+            const modifier = intensity[Math.floor(Math.random() * intensity.length)];
+            return `${modifier.charAt(0).toUpperCase() + modifier.slice(1)} like a ${animal} ${action}`;
+        }
+
+        function generateComparison() {
+            const animal = aussieAnimals[Math.floor(Math.random() * aussieAnimals.length)];
+            const bodyParts = ["donger", "tail", "pouch", "beak", "claws"];
+            const bodyPart = bodyParts[Math.floor(Math.random() * bodyParts.length)];
+            const adjectives = ["useless", "mad", "dry", "tough", "slippery"];
+            const adjective = adjectives[Math.floor(Math.random() * adjectives.length)];
+            return `${adjective.charAt(0).toUpperCase() + adjective.slice(1)} as a ${animal}'s ${bodyPart}`;
+        }
+
+        function generateExclamation() {
+            const exclamations = ["Stone", "Cop", "Strike", "Bloody", "Crikey"];
+            const exclamation = exclamations[Math.floor(Math.random() * exclamations.length)];
+            const animal = aussieAnimals[Math.floor(Math.random() * aussieAnimals.length)];
+            const actions = ["sideways", "backwards", "upside down", "left-handed", "blindfolded"];
+            const action = actions[Math.floor(Math.random() * actions.length)];
+            return `${exclamation} the flamin' ${animal} ${action}!`;
+        }
+
+        function generateSituation() {
+            const situations = [
+                "She'll be right as a",
+                "No worries, just a",
+                "Fair dinkum, that's one",
+                "Too right, what a",
+                "Bloody oath, such a"
+            ];
+            const situation = situations[Math.floor(Math.random() * situations.length)];
+            const animal = aussieAnimals[Math.floor(Math.random() * aussieAnimals.length)];
+            const descriptors = ["legendary", "ripper", "bonzer", "grouse", "beaut"];
+            const descriptor = descriptors[Math.floor(Math.random() * descriptors.length)];
+            return `${situation} ${descriptor} ${animal}`;
+        }
+
+        // Add some ambient Australian atmosphere
+        setInterval(() => {
+            const stats = ['viral-potential', 'authenticity'];
+            const randomStat = stats[Math.floor(Math.random() * stats.length)];
+            const element = document.getElementById(randomStat);
+            const currentValue = parseInt(element.textContent);
+            const newValue = Math.max(70, Math.min(99, currentValue + Math.floor(Math.random() * 6) - 3));
+            element.textContent = newValue + '%';
+        }, 5000);
+
+        // Initialize with a welcome message
+        window.onload = () => {
+            setTimeout(() => {
+                if (phrasesGenerated === 0) {
+                    const predictionElement = document.getElementById('prediction');
+                    const phraseElement = document.getElementById('phrase-text');
+                    predictionElement.style.display = 'block';
+                    phraseElement.innerHTML = '👋 G\'day! Click the button to predict the next viral Aussie phrase!';
+                }
+            }, 2000);
+        };
+    </script>
+</body>
+</html>
