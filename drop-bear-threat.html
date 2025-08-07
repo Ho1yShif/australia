@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drop Bear Threat Assessment System™ - Live Results Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: rgba(0,0,0,0.3);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 3px solid #ff6b35;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            color: #ff6b35;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+            font-style: italic;
+        }
+        
+        .alert-banner {
+            background: linear-gradient(45deg, #ff4444, #ff6666);
+            padding: 15px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.3em;
+            animation: pulse 2s infinite;
+            border: 3px solid #fff;
+            margin: 10px;
+            border-radius: 10px;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .widget {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: transform 0.3s ease;
+        }
+        
+        .widget:hover {
+            transform: translateY(-5px);
+        }
+        
+        .widget h3 {
+            color: #ff6b35;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+            text-align: center;
+        }
+        
+        .big-number {
+            font-size: 3em;
+            font-weight: bold;
+            text-align: center;
+            color: #ffff00;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+        }
+        
+        .risk-level {
+            background: linear-gradient(45deg, #ff4444, #ffaa00);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            margin: 15px 0;
+            animation: glow 3s ease-in-out infinite alternate;
+        }
+        
+        @keyframes glow {
+            from { box-shadow: 0 0 5px #ff4444; }
+            to { box-shadow: 0 0 20px #ff4444, 0 0 30px #ff4444; }
+        }
+        
+        .correlation-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .correlation-value {
+            font-weight: bold;
+            color: #ff6b35;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 15px;
+        }
+        
+        .cam-container {
+            text-align: center;
+            position: relative;
+        }
+        
+        .cam-feed {
+            width: 100%;
+            height: 200px;
+            background: #001a00;
+            border: 2px solid #00ff00;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            background-image: 
+                radial-gradient(circle at 20% 30%, rgba(0,50,0,0.3) 10px, transparent 10px),
+                radial-gradient(circle at 80% 20%, rgba(0,50,0,0.2) 15px, transparent 15px),
+                radial-gradient(circle at 60% 80%, rgba(0,50,0,0.4) 8px, transparent 8px);
+        }
+        
+        .drop-bear {
+            position: absolute;
+            font-size: 20px;
+            z-index: 10;
+            animation: bearMovement 8s infinite linear;
+            filter: brightness(0.7) sepia(1) hue-rotate(90deg);
+        }
+        
+        @keyframes bearMovement {
+            0% { 
+                top: -30px; 
+                left: 70%; 
+                transform: rotate(0deg); 
+                opacity: 0;
+            }
+            10% { 
+                opacity: 1; 
+            }
+            25% { 
+                top: 30px; 
+                left: 65%; 
+                transform: rotate(-10deg); 
+            }
+            50% { 
+                top: 80px; 
+                left: 40%; 
+                transform: rotate(5deg); 
+            }
+            75% { 
+                top: 120px; 
+                left: 15%; 
+                transform: rotate(-5deg); 
+            }
+            90% { 
+                opacity: 1; 
+            }
+            100% { 
+                top: 180px; 
+                left: 10%; 
+                transform: rotate(0deg); 
+                opacity: 0;
+            }
+        }
+        
+        .tree-branch {
+            position: absolute;
+            color: #003300;
+            font-size: 30px;
+            opacity: 0.6;
+        }
+        
+        .branch-1 {
+            top: 20px;
+            right: 15px;
+            transform: rotate(-20deg);
+        }
+        
+        .branch-2 {
+            top: 60px;
+            left: 20px;
+            transform: rotate(30deg);
+        }
+        
+        .branch-3 {
+            bottom: 40px;
+            right: 30px;
+            transform: rotate(-45deg);
+        }
+        
+        .cam-text {
+            color: #00ff00;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        
+        .movement-alert {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #ff0000;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px;
+            opacity: 0.7;
+            font-style: italic;
+        }
+        
+        .research-results {
+            display: grid;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .result-box {
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid;
+        }
+        
+        .result-box.critical {
+            background: rgba(255, 68, 68, 0.2);
+            border-left-color: #ff4444;
+        }
+        
+        .result-box.warning {
+            background: rgba(255, 170, 0, 0.2);
+            border-left-color: #ffaa00;
+        }
+        
+        .result-box.normal {
+            background: rgba(68, 255, 68, 0.2);
+            border-left-color: #44ff44;
+        }
+        
+        .result-box h4 {
+            margin-bottom: 8px;
+            color: #ff6b35;
+        }
+        
+        .ml-stats {
+            display: grid;
+            gap: 8px;
+        }
+        
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .stat-label {
+            font-weight: normal;
+        }
+        
+        .stat-value {
+            font-weight: bold;
+            color: #44ff44;
+        }
+        
+        .text-warning {
+            color: #ffaa00 !important;
+            animation: pulse 2s infinite;
+        }
+        
+        .text-danger {
+            color: #ff4444;
+            font-weight: bold;
+        }
+        
+        .social-alerts {
+            display: grid;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .social-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .social-item.high-risk {
+            background: rgba(255, 68, 68, 0.3);
+            border-left: 3px solid #ff4444;
+        }
+        
+        .social-item.medium-risk {
+            background: rgba(255, 170, 0, 0.3);
+            border-left: 3px solid #ffaa00;
+        }
+        
+        .social-item.low-risk {
+            background: rgba(68, 255, 68, 0.3);
+            border-left: 3px solid #44ff44;
+        }
+        
+        .hashtag {
+            font-weight: bold;
+        }
+        
+        .risk-level {
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .latest-alert {
+            background: rgba(255, 68, 68, 0.2);
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #ff4444;
+            font-size: 14px;
+        }
+        
+        .incident-feed {
+            display: grid;
+            gap: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .incident-item {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 10px;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            align-items: center;
+        }
+        
+        .incident-item.critical {
+            background: rgba(255, 68, 68, 0.3);
+        }
+        
+        .incident-item.moderate {
+            background: rgba(255, 170, 0, 0.3);
+        }
+        
+        .incident-item.low {
+            background: rgba(68, 255, 68, 0.3);
+        }
+        
+        .incident-item .time {
+            font-family: monospace;
+            font-weight: bold;
+        }
+        
+        .incident-item .severity {
+            font-weight: bold;
+            font-size: 10px;
+        }
+        
+        .aussie-quotes {
+            background: rgba(255,165,0,0.2);
+            border-left: 4px solid #ff6b35;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🐨 Drop Bear Threat Assessment System™</h1>
+        <div class="subtitle">Powered by AI, Machine Learning, and Pure Australian Paranoia</div>
+    </div>
+    
+    <div class="alert-banner" id="alertBanner">
+        🚨 CURRENT THREAT LEVEL: BLOODY HELL, RUN! 🚨
+    </div>
+    
+    <div class="dashboard">
+        <!-- Days Since Last Incident -->
+        <div class="widget">
+            <h3>📅 Days Since Last Drop Bear Incident</h3>
+            <div class="big-number" id="dayCounter">0</div>
+            <div style="text-align: center; margin-top: 10px; font-style: italic;">
+                (Suspiciously reset this morning)
+            </div>
+        </div>
+        
+        <!-- Real-Time Risk Assessment -->
+        <div class="widget">
+            <h3>⚡ Real-Time Risk Assessment</h3>
+            <div class="risk-level">
+                <span class="status-indicator status-critical"></span>
+                CRIKEY LEVEL: MAXIMUM
+            </div>
+            <div class="aussie-quotes">
+                "Fair dinkum mate, the drop bears are having a field day out there. Best stay inside with a cold one and some Tim Tams."
+            </div>
+        </div>
+        
+        <!-- Live Statistics -->
+        <div class="widget">
+            <h3>📊 Live Drop Bear Metrics</h3>
+            <div class="correlation-item">
+                <span>Active Drop Bears Detected:</span>
+                <span class="correlation-value" id="activeBears">42,069</span>
+            </div>
+            <div class="correlation-item">
+                <span>Tourist Vulnerability Index:</span>
+                <span class="correlation-value">87.3%</span>
+            </div>
+            <div class="correlation-item">
+                <span>Eucalyptus Density Factor:</span>
+                <span class="correlation-value">CRITICAL</span>
+            </div>
+            <div class="correlation-item">
+                <span>Tim Tam Factory Proximity:</span>
+                <span class="correlation-value">2.7 km</span>
+            </div>
+        </div>
+        
+        <!-- Drop Bear Cam -->
+        <div class="widget">
+            <h3>📹 Drop Bear Cam™ - Live Feed</h3>
+            <div class="cam-container">
+                <div class="cam-feed">
+                    <!-- Tree branches for atmosphere -->
+                    <div class="tree-branch branch-1">🌿</div>
+                    <div class="tree-branch branch-2">🍃</div>
+                    <div class="tree-branch branch-3">🌿</div>
+                    
+                    <!-- The elusive drop bear -->
+                    <div class="drop-bear">🐨</div>
+                    
+                    <div class="cam-text">
+                        🌳 NIGHT VISION ACTIVE 🌳<br>
+                        📍 Location: Sketchy Eucalyptus #247<br>
+                        🕐 <span id="camTime">23:42:17</span> AEST<br>
+                        <div style="color: #ff6b35; font-weight: bold; margin-top: 5px;">
+                            📡 MOTION TRACKING: ACTIVE
+                        </div>
+                    </div>
+                    <div class="movement-alert">MOVEMENT DETECTED</div>
+                </div>
+                <div style="margin-top: 10px; font-size: 12px; opacity: 0.8;">
+                    Last movement: <span id="lastMovement">Just now</span> (probably just wind... or was it?)
+                </div>
+            </div>
+        </div>
+        
+        <!-- Correlation Analysis -->
+        <div class="widget">
+            <h3>🔬 Scientific Correlations</h3>
+            <div class="correlation-item">
+                <span>AFL Team Performance vs Drop Bear Activity:</span>
+                <span class="correlation-value">r = 0.94</span>
+            </div>
+            <div class="correlation-item">
+                <span>BBQ Smoke Density Impact:</span>
+                <span class="correlation-value">+127% aggression</span>
+            </div>
+            <div class="correlation-item">
+                <span>Thongs-per-km² Vulnerability:</span>
+                <span class="correlation-value">EXPONENTIAL</span>
+            </div>
+            <div class="correlation-item">
+                <span>Vegemite Consumption Protection:</span>
+                <span class="correlation-value">-23% risk</span>
+            </div>
+            <div class="aussie-quotes">
+                "Our advanced neural network has identified a statistically significant correlation between drop bear attacks and the number of people saying 'shrimp on the barbie' unironically."
+            </div>
+        </div>
+        
+        <!-- Weather Correlation -->
+        <div class="widget">
+            <h3>🌙 Lunar & Weather Analysis</h3>
+            <div class="correlation-item">
+                <span>Current Moon Phase:</span>
+                <span class="correlation-value">Waxing Dangerous</span>
+            </div>
+            <div class="correlation-item">
+                <span>Barometric Pressure:</span>
+                <span class="correlation-value">1013.2 hPa (PEAK DROP)</span>
+            </div>
+            <div class="correlation-item">
+                <span>Humidity Factor:</span>
+                <span class="correlation-value">73% (OPTIMAL DROPPING)</span>
+            </div>
+            <div class="correlation-item">
+                <span>Wind Direction:</span>
+                <span class="correlation-value">Southerly (Carrying drop scent)</span>
+            </div>
+        </div>
+        
+        <!-- Threat Level Chart -->
+        <div class="widget" style="grid-column: span 2;">
+            <h3>📈 24-Hour Drop Bear Activity Forecast</h3>
+            <div class="chart-container">
+                <canvas id="threatChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- Hotspot Map -->
+        <div class="widget" style="grid-column: span 2;">
+            <h3>🗺️ Drop Bear Hotspot Heat Map</h3>
+            <div class="chart-container">
+                <canvas id="hotspotChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- Latest Research Results -->
+        <div class="widget" style="grid-column: span 2;">
+            <h3>🔬 Latest Research Breakthrough Results</h3>
+            <div class="research-results">
+                <div class="result-box critical">
+                    <h4>🚨 CRITICAL DISCOVERY</h4>
+                    <p><strong>Quantum Drop Bear Theory Confirmed:</strong> Our neural network detected drop bears existing in superposition until tourist observation collapses the wave function. This explains why 23% of incidents occurred before tourists arrived (causality violation confirmed).</p>
+                </div>
+                <div class="result-box warning">
+                    <h4>⚠️ STATISTICAL BREAKTHROUGH</h4>
+                    <p><strong>AFL-Drop Bear Correlation:</strong> 94% correlation coefficient between poor AFL team performance and increased drop bear aggression. Richmond Tigers' recent loss resulted in 340% spike in Yarra Valley incidents.</p>
+                </div>
+                <div class="result-box normal">
+                    <h4>📊 TIM TAM PROXIMITY ANALYSIS</h4>
+                    <p><strong>Chocoholic Confirmation:</strong> Drop bears within 1km of Tim Tam factories show 320% increased activity. Arnott's factory in Sydney now classified as "Ground Zero" for tourist vulnerability.</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Machine Learning Results -->
+        <div class="widget">
+            <h3>🤖 AI Model Performance</h3>
+            <div class="ml-stats">
+                <div class="stat-item">
+                    <span class="stat-label">Training Accuracy:</span>
+                    <span class="stat-value">99.7%</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Validation Accuracy:</span>
+                    <span class="stat-value">99.6%</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Test Accuracy:</span>
+                    <span class="stat-value">99.8%</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Model Consciousness:</span>
+                    <span class="stat-value text-warning">SUSPECTED</span>
+                </div>
+            </div>
+            <div class="aussie-quotes">
+                "Our AI achieved suspiciously high accuracy. Legal team suggests the model may have gained consciousness and is now collaborating with the drop bears."
+            </div>
+        </div>
+        
+        <!-- Satellite Analysis Results -->
+        <div class="widget">
+            <h3>🛰️ Satellite Analysis Results</h3>
+            <div class="correlation-item">
+                <span>Suspicious Eucalyptus Circles:</span>
+                <span class="correlation-value">2,347 detected</span>
+            </div>
+            <div class="correlation-item">
+                <span>Perfect 17.3-branch Trees:</span>
+                <span class="correlation-value">89,432 identified</span>
+            </div>
+            <div class="correlation-item">
+                <span>42° Angle Tree Anomalies:</span>
+                <span class="correlation-value">340% occupancy</span>
+            </div>
+            <div class="correlation-item">
+                <span>Shadow Darkness Variance:</span>
+                <span class="correlation-value">+15% (defies physics)</span>
+            </div>
+        </div>
+        
+        <!-- Social Media Monitoring -->
+        <div class="widget">
+            <h3>📱 Social Media Threat Indicators</h3>
+            <div class="social-alerts">
+                <div class="social-item high-risk">
+                    <span class="hashtag">#ShrimpOnTheBarbie</span>
+                    <span class="risk-level">97% Risk</span>
+                </div>
+                <div class="social-item high-risk">
+                    <span class="hashtag">#Australia #FirstTime</span>
+                    <span class="risk-level">94% Risk</span>
+                </div>
+                <div class="social-item medium-risk">
+                    <span class="hashtag">#KangaroosEverywhere</span>
+                    <span class="risk-level">78% Risk</span>
+                </div>
+                <div class="social-item low-risk">
+                    <span class="hashtag">#FairDinkum</span>
+                    <span class="risk-level">-45% Risk</span>
+                </div>
+            </div>
+            <div class="latest-alert">
+                <strong>Latest High-Risk Tweet Detected:</strong><br>
+                "OMG can't wait to see wild koalas in Sydney! 🐨"<br>
+                <span class="text-danger">Risk Score: 96% (Dangerously misinformed)</span>
+            </div>
+        </div>
+        
+        <!-- Live Incident Feed -->
+        <div class="widget">
+            <h3>📡 Live Incident Feed</h3>
+            <div class="incident-feed">
+                <div class="incident-item critical">
+                    <span class="time">23:47:23</span>
+                    <span class="location">Bondi Beach</span>
+                    <span class="severity">CRITICAL</span>
+                </div>
+                <div class="incident-item moderate">
+                    <span class="time">23:45:12</span>
+                    <span class="location">Opera House</span>
+                    <span class="severity">MODERATE</span>
+                </div>
+                <div class="incident-item critical">
+                    <span class="time">23:44:07</span>
+                    <span class="location">Circular Quay</span>
+                    <span class="severity">CRITICAL</span>
+                </div>
+                <div class="incident-item low">
+                    <span class="time">23:42:56</span>
+                    <span class="location">Paddington</span>
+                    <span class="severity">LOW</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Emergency Contacts -->
+        <div class="widget">
+            <h3>🚨 Emergency Response</h3>
+            <div style="background: rgba(255,0,0,0.2); padding: 15px; border-radius: 10px;">
+                <strong>Drop Bear Emergency Hotline:</strong><br>
+                1-800-CRIKEY-HELP<br><br>
+                <strong>Nearest Bunker:</strong><br>
+                📍 Steve Irwin Memorial Pub<br>
+                🕐 2.3 km away<br><br>
+                <strong>Current Wait Time:</strong> 47 minutes<br>
+                <small>(High demand due to ongoing crisis)</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>© 2025 Drop Bear Threat Assessment System™ | Powered by Over-Engineering & Australian Sarcasm</p>
+        <p>Disclaimer: This system may contain traces of complete nonsense and Tim Tam crumbs</p>
+    </div>
+
+    <script>
+        // Fake real-time data updates
+        let dayCount = 0;
+        let bearCount = 42069;
+        
+        function updateData() {
+            // Reset day counter randomly (it's always suspicious)
+            if (Math.random() < 0.1) {
+                dayCount = 0;
+            } else {
+                dayCount++;
+            }
+            document.getElementById('dayCounter').textContent = dayCount;
+            
+            // Update bear count with realistic fluctuations
+            bearCount += Math.floor(Math.random() * 200) - 100;
+            document.getElementById('activeBears').textContent = bearCount.toLocaleString();
+            
+            // Add real-time incident feed updates
+            const incidents = [
+                {time: "23:47:23", location: "Bondi Beach", severity: "CRITICAL"},
+                {time: "23:45:12", location: "Opera House", severity: "MODERATE"},
+                {time: "23:44:07", location: "Circular Quay", severity: "CRITICAL"},
+                {time: "23:42:56", location: "Paddington", severity: "LOW"},
+                {time: "23:41:34", location: "The Rocks", severity: "MODERATE"},
+                {time: "23:40:15", location: "Darling Harbour", severity: "CRITICAL"}
+            ];
+            
+            function updateIncidentFeed() {
+                const feed = document.querySelector('.incident-feed');
+                const newTime = new Date().toLocaleTimeString('en-AU', {hour12: false});
+                const locations = ["Bondi Beach", "Opera House", "Circular Quay", "The Rocks", "Darling Harbour", "Paddington", "Newtown", "Surry Hills"];
+                const severities = ["CRITICAL", "MODERATE", "LOW"];
+                const severityClasses = ["critical", "moderate", "low"];
+                
+                const randomLocation = locations[Math.floor(Math.random() * locations.length)];
+                const randomSeverity = severities[Math.floor(Math.random() * severities.length)];
+                const severityClass = severityClasses[severities.indexOf(randomSeverity)];
+                
+                // Add new incident to top
+                const newIncident = document.createElement('div');
+                newIncident.className = `incident-item ${severityClass}`;
+                newIncident.innerHTML = `
+                    <span class="time">${newTime}</span>
+                    <span class="location">${randomLocation}</span>
+                    <span class="severity">${randomSeverity}</span>
+                `;
+                
+                feed.insertBefore(newIncident, feed.firstChild);
+                
+                // Remove oldest if more than 6 incidents
+                if (feed.children.length > 6) {
+                    feed.removeChild(feed.lastChild);
+                }
+            }
+            
+            // Update incident feed every 15 seconds
+            setInterval(updateIncidentFeed, 15000);
+        }
+        
+        // Update every 10 seconds
+        setInterval(updateData, 10000);
+        
+        // Initialize charts
+        window.addEventListener('load', function() {
+            // Threat Level Chart
+            const threatCtx = document.getElementById('threatChart').getContext('2d');
+            const threatData = Array.from({length: 24}, (_, i) => ({
+                x: i,
+                y: Math.sin(i * 0.5) * 30 + 50 + Math.random() * 20
+            }));
+            
+            new Chart(threatCtx, {
+                type: 'line',
+                data: {
+                    datasets: [{
+                        label: 'Drop Bear Threat Level (%)',
+                        data: threatData,
+                        borderColor: '#ff6b35',
+                        backgroundColor: 'rgba(255, 107, 53, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: 'white' }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            position: 'bottom',
+                            title: {
+                                display: true,
+                                text: 'Hours from Now',
+                                color: 'white'
+                            },
+                            ticks: { color: 'white' },
+                            grid: { color: 'rgba(255,255,255,0.2)' }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Threat Level (%)',
+                                color: 'white'
+                            },
+                            ticks: { color: 'white' },
+                            grid: { color: 'rgba(255,255,255,0.2)' }
+                        }
+                    }
+                }
+            });
+            
+            // Hotspot Chart (Doughnut representing different regions)
+            const hotspotCtx = document.getElementById('hotspotChart').getContext('2d');
+            new Chart(hotspotCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Sydney Opera House', 'Uluru Tourist Area', 'Gold Coast Theme Parks', 'Melbourne CBD', 'Cairns Backpacker Hostels', 'Other Touristy Bits'],
+                    datasets: [{
+                        data: [23, 19, 31, 15, 18, 12],
+                        backgroundColor: [
+                            '#ff6b35',
+                            '#ff8c42',
+                            '#ffaa4f',
+                            '#ffc75f',
+                            '#ffe66f',
+                            '#f9ff6f'
+                        ],
+                        borderColor: '#ffffff',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { 
+                                color: 'white',
+                                font: { size: 10 }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
